@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="app-release" content="v14.11" />
+  <title>Headrest Listening Test Lab v14.11</title>
+  <link rel="stylesheet" href="./spill-demo.css?rev=v14.11" />
+</head>
+<body class="demoMode">
+  <header class="header wide">
+    <h1>Headrest Listening Test Lab</h1>
+    <div class="subtitle releaseStatus">EXPERIMENTAL · PRE-RELEASE BUILD</div>
+    <div class="subtitle">v14.11 · Listener A</div>
+  </header>
+
+  <section class="scopeBox cabinTestBox wide">
+    <div class="cabinTestHeader"><h2>Cabin demo · Listener A</h2><div id="cabinTestReadout" class="smallNote" style="margin:0;">Stopped · --</div></div>
+    <div class="transportRow demoTransport">
+      <div class="demoPlaybackControls">
+        <button id="startBoth" class="labOnly" disabled style="display:none;">Start / sync</button>
+        <button id="stopBoth" class="labOnly" disabled style="display:none;">Stop</button>
+        <button id="restartBoth" class="labOnly" disabled style="display:none;">Restart / sync</button>
+        <div class="demoProgramControl" role="group" aria-label="Program A demo content">
+          <div class="demoProgramLabel">PROGRAM A</div>
+          <div class="demoProgramChooser">
+            <select id="cabinProgramSelect" aria-label="Program A demo content"><option value="builtin" selected>Procedural Bach BWV 846</option></select>
+          </div>
+          <div class="demoProgramNavigation">
+            <button id="cabinProgramPrevious" class="demoProgramStep" type="button" aria-label="Previous Program A content" disabled>◀◀</button>
+            <button id="demoTransportPlay" class="demoProgramPlay" type="button" aria-label="Play Program A demo">▶</button>
+            <button id="cabinProgramNext" class="demoProgramStep" type="button" aria-label="Next Program A content" disabled>▶▶</button>
+          </div>
+        </div>
+        <div hidden aria-hidden="true"><output id="monitorGainValue">−12.0 dB</output><input id="monitorGain" type="range" min="-36" max="0" step="6" value="-6" aria-label="Demo volume" /></div>
+      </div>
+      <strong id="cabinProgramSource" style="display:none;">Procedural Bach BWV 846</strong>
+<section class="demoPresentationControl" aria-label="Presentation controls">
+        <div class="presentationControlTitle">PRESENTATION</div>
+        <div class="presentationControlSurface"><button id="demoMuteForInfo" class="presentationMuteControl" type="button" disabled>MUTE FOR NARRATION</button></div>
+      </section>
+    </div>
+    <div class="cabinVisualGrid">
+      <aside id="listenerACard" class="listenerCard listenerDetails"><h3>Listener A</h3><div class="smallNote" style="margin:0;">Direct intended programme</div><div class="listenerValue"><span>A content</span><strong id="listenerAContent">--</strong></div><div class="listenerValue"><span>Shared Scene</span><strong id="listenerAScene">--</strong></div><div class="listenerValue"><span>Ambient</span><strong id="listenerAAmbient">--</strong></div><div class="listenerValue"><span>Total, estimated</span><strong id="listenerATotal">--</strong></div></aside>
+      <div class="cabinVisualStage"><div class="listenerCompareTitle">LISTENER A · PERSONAL SOUND ZONE</div><canvas id="cabinTest" width="640" height="420"></canvas></div>
+      <div class="listenerLevelControls"><div class="demoFeelnessControl" role="group" aria-label="Listener A controls"><div class="demoAContentVolumeControl" role="group" aria-label="Program A content volume">
+          <div class="demoAContentVolumeHeader"><span>VOLUME</span><output id="demoAContentVolumeValue" hidden>0.0 dB</output></div>
+          <button id="demoAContentVolDown" type="button" aria-label="Decrease A content volume by 6 decibels" title="A VOL down">−</button>
+          <div id="demoAContentVolumeSegments" class="demoAContentVolumeSegments" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <button id="demoAContentVolUp" type="button" aria-label="Increase A content volume by 6 decibels" title="A VOL up">+</button>
+        </div><div class="feelnessDivider" aria-hidden="true"></div><div class="feelnessTitle">BASS FEELNESS</div><button id="systemBoost" class="systemBoost" type="button" disabled>TEST EFFECT</button><button data-feelness="normal" class="active">DEFAULT</button><button data-feelness="light">NO VIBRATION</button><div id="demoFeelnessHint" class="feelnessHint"></div></div><div class="miniLevelScope" aria-label="Live listener levels">
+          <canvas id="scope" width="760" height="110"></canvas>
+          
+        </div><div class="demoSpeedControl" role="group" aria-label="Cabin noise"><div class="speedTitle">CABIN NOISE</div><button data-cabin-speed="100">100 km/h</button><button data-cabin-speed="50" class="active">50 km/h</button><button data-cabin-speed="0">0 km/h</button></div></div>
+      
+    </div>
+  </section>
+
+  <div class="demoFooter wide">
+    <button id="hwSetupStart" class="hwSetupOpenButton" type="button" aria-label="Check device volume">CHECK VOL</button>
+    <button id="viewModeToggle" class="modeToggle" aria-pressed="true">SETTINGS</button>
+    <button id="versionInfoOpen" class="releaseInfoOpen" type="button" aria-haspopup="dialog" aria-controls="releaseInfoDialog" aria-label="Version v14.11 information">v14.11</button>
+  </div>
+
+  <section id="labSettingsPanel" class="controlBox wide labOnly demoSettingsPanel">
+    <div class="scopeHeader"><h2><button id="labSettingsTitle" class="labSettingsTitle" type="button" aria-expanded="false" aria-controls="demoMoreDetails" aria-label="Lab Settings. Long press for advanced details.">Lab Settings</button></h2><strong id="demoSetupReady" class="demoSetupReady">DEMO READY</strong></div>
+    <div class="demoSettingsPrimary">
+      <div class="demoSetupItem demoPlaylistCard">
+        <div class="scopeHeader"><div><span class="label">PROGRAM A</span><strong id="demoSetupProgram">Procedural Bach BWV 846</strong></div><div id="demoSetupTrim" class="smallNote">Reference trim +10.0 dB</div></div>
+        <div class="demoPlaylistToolbar"><button id="loadLocalDefault" type="button">Load default tracks</button><label class="fileButton" for="demoPlaylistFiles">Add tracks</label><span id="demoPlaylistSummary" class="smallNote">Bach only</span><input id="demoPlaylistFiles" type="file" accept="audio/*" multiple hidden /></div>
+        <div id="demoPlaylistList" class="demoPlaylistList" aria-live="polite"></div>
+      </div>
+      <div class="demoSetupItem demoSetupPresentation demoLiveOutput">
+        <div class="demoSpectrumHeader"><span class="label">PROGRAM A SPECTRUM</span><span class="demoSpectrumLegend"><span class="pre">Pre protection</span><span>Protected output</span><span class="background">Cabin + Scene background</span></span></div><div id="demoOutputSpectrum" class="demoOutputSpectrum"></div><div class="demoProtectionSummary demoProtectionCombined"><div class="demoProtectionColumns"><div><div class="demoProtectionHeader"><span class="label">LOW-BAND NET GAIN · COMPRESSOR + LIMITER</span><strong id="demoSetupProtectionReduction">0.0 dB preview</strong></div><div class="demoProtectionCompact"><div class="demoProtectionRail" aria-hidden="true"><div class="demoProtectionZero"></div><div id="demoSetupProtectionFill" class="demoProtectionFill"></div></div><div class="demoProtectionTicks" aria-hidden="true"><span>−18 dB</span><span>0 dB</span><span>+12 dB</span></div></div><div id="demoSetupProtectionNote" class="smallNote">Net gain: compressor boost minus limiter reduction</div></div><div class="demoGuardCompact"><span class="label">OUTPUT GUARD</span><strong id="demoSetupProtection" class="demoGuardFlash" aria-live="polite"></strong></div></div></div>
+      </div>
+    </div>
+    
+  </section>
+
+  <div id="demoMoreDetails" class="demoMoreDetails wide labOnly" hidden>
+    <div class="demoMoreDetailsBody">
+      <section class="demoSetupItem demoConditionsGroup" aria-label="Demo conditions">
+        <span class="label">DEMO CONDITIONS</span>
+        
+        <div class="demoConditionsGrid"><div class="demoConditionItem"><span class="label">CABIN CONDITION</span><strong id="demoSetupCabin">50 km/h</strong><div id="demoSetupScene" class="smallNote">Scene off</div></div><div class="demoConditionItem demoFeelnessCheck"><span class="label">A FEELNESS CHECK · DEFAULT VOL</span><strong id="demoFeelnessSetupState">DEFAULT</strong><div class="buttonRow demoFeelnessPresetRow"><button type="button" data-feelness="normal" class="active">DEFAULT</button><button type="button" data-feelness="light">NO VIBRATION</button></div><div class="smallNote">Check the selected programme at its normal Demo VOL before starting.</div></div><div class="demoConditionItem demoLevelCondition"><span class="label">DEMO &amp; PROGRAM A LEVELS</span><div class="demoLevelOutputRow"><span>DEMO OUTPUT</span><strong id="demoSetupPresentation">DEMO −12.0 dB</strong></div><div class="demoOutputSettings demoPresentationLevel demoCandidatePresentation" aria-label="Program A content volume"><div class="demoCandidateTitle">A CONTENT VOL · <strong id="aContentVolumeValue">0.0 dB</strong> · A PRE</div><div id="labDemoVolumeControl" class="demoCandidateControl" aria-label="Program A content level" aria-live="polite"><button id="labDemoVolDown" type="button">A VOL −</button><div id="labDemoVolumeSegments" class="demoCandidateSegments" aria-hidden="true"><div id="labDemoVolumePeak" class="demoVolumePeak"></div><div id="labDemoVolumeTrace" class="demoVolumeRibbonFog"></div><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><button id="labDemoVolUp" type="button">A VOL +</button></div><input id="aContentVolume" type="range" min="-30" max="6" step="6" value="0" aria-label="Program A listener music volume" hidden /></div></div></div>
+        <div class="demoDiagnosticsGroup"><details class="lowBandDiagnosticsDisclosure diagnosticsCombined" open><summary>DIAGNOSTICS</summary><div class="lowBandDiagnosticsReadouts" aria-live="off"><div><span>Compressor detector · 20–90 Hz RMS, pre-gain</span><strong id="demoSetupDetectorLevel">—</strong></div><div><span>Limiter detector · 20–90 Hz RMS, post-gain</span><strong id="demoSetupLimiterDetectorLevel">—</strong></div><div><span id="demoSetupProtectionThresholdLabel">Active threshold</span><strong id="demoSetupProtectionThreshold">—</strong></div><div><span>Compressor gain · actual</span><strong id="demoSetupCompressorGain">0.0 dB</strong></div><div><span>Limiter reduction · actual</span><strong id="demoSetupLimiterReduction">0.0 dB</strong></div><div><span>Program A RMS · full band, pre-compressor</span><strong id="demoSetupProgramLevel">—</strong></div></div><div class="smallNote lowBandDiagnosticsFootnote">Digital dBFS · values refresh every 0.5 s · levels are not acoustic SPL</div><div class="outputChainDiagnosticsHeader">OUTPUT CHAIN DIAGNOSTICS <span id="outputDiagnosticsState">READY</span></div><div class="outputChainLayout"><div id="outputChainDiagnostics" class="smallNote outputChainDiagnosticsText"><div class="outputChainDiagnosticsMeta">400 ms full-band RMS · 1 s observed sample peak</div><div class="outputChainStep"><strong>Waiting for playback</strong><span>Output chain values will appear here.</span></div></div><section id="outputAnalysisWindow" class="outputAnalysisWindow demoFinalOutputSetup"></section></div></details></div>
+      </section>
+      <section class="sourceGrid wide labOnly">
+    <div class="sourceCard programA"><div class="sourceTitle"><h2>Program A</h2><span id="programAState">no file</span></div><div class="buttonRow" style="margin-bottom:10px;"><span class="smallNote" style="margin:0 6px 0 0;">Program A source</span><button id="programASourceBuiltin" class="active">Built-in music</button><button id="programASourceFile">Audio file</button></div><div id="programABuiltinRow" class="smallNote" style="margin:0 0 10px 0;">Built-in: Procedural Music Lab v3.2 · Bach BWV 846 · ready</div><div class="fileRow" id="programAFileRow" style="display:none;"><label class="fileButton" for="programAFile">Select A-content file</label><span id="programAFileName" class="fileName">No file selected</span><input id="programAFile" type="file" accept="audio/*" hidden /></div><div class="controlRow"><label for="programReferenceTrim">Content reference level</label><input id="programReferenceTrim" type="range" min="-24" max="24" step="0.5" value="10" /><div id="programReferenceTrimValue" class="value">+10.0 dB</div></div><div class="controlRow labOnly"><label for="protectionCeiling">Low-band protection target · 400 ms RMS</label><input id="protectionCeiling" type="range" min="-40" max="-3" step="0.5" value="-18" /><div id="protectionCeilingValue" class="value">−18.0 dBFS</div></div><div class="buttonRow labOnly"><span class="smallNote" style="margin:0 6px 0 0;">Presentation VOL curve</span><button data-protection-curve="off">Off</button><button data-protection-curve="gentle">Gentle</button><button data-protection-curve="locked" class="active">Locked</button></div><div class="smallNote labOnly">3 dB soft knee · curve starts above −12 dB Presentation VOL.</div><div class="buttonRow labOnly"><span class="smallNote" style="margin:0 6px 0 0;">Protection mode</span><button data-protection-mode="active" class="active">Active</button><button data-protection-mode="bypass">Bypass · test</button></div><div class="smallNote labOnly">Bypass removes low-band attenuation at every Presentation VOL. Use only to demonstrate or test system limits.</div><div id="protectionStatus" class="smallNote labOnly">Protection: not started</div><div id="outputGuardStatus" class="smallNote labOnly">Output guard: not started</div><div class="buttonRow"><span class="smallNote" style="margin:0 6px 0 0;">Bass feelness</span><button data-feelness="light">No vibration</button><button data-feelness="normal" class="active">Normal</button></div><div id="protectionDemoState" class="smallNote">Tactile feelness control: Normal</div><div id="programPreMonitor" class="smallNote labOnly">Content pre-protection: RMS -- · 1 s peak --</div><div class="buttonRow" style="margin-top:10px;"><button id="programAMute">Mute A content</button><button id="programASolo">Solo A content</button></div><div id="programAAnalysis" class="smallNote">Program A K, 3 s: -- · measured after Content reference level</div></div>
+    <div class="sourceCard scene"><div class="sourceTitle"><h2>Scene bed</h2><span id="sceneState">brown · generated on start</span></div><div class="buttonRow" style="margin-bottom:10px;"><span class="smallNote" style="margin:0 6px 0 0;">Scene source</span><button id="sceneSourceFile">File</button><button id="sceneSourcePink">Pink noise</button><button id="sceneSourceBrown" class="active">Brown noise 50 Hz HP</button></div><div class="fileRow" id="sceneFileRow" style="display:none;"><label class="fileButton" for="sceneFile">Select scene file</label><span id="sceneFileName" class="fileName">No file selected</span><input id="sceneFile" type="file" accept="audio/*" hidden /></div><div class="controlRow"><label for="sceneGain">Scene gain</label><input id="sceneGain" type="range" min="-80" max="12" step="0.5" value="-80" /><div id="sceneGainValue" class="value">−24.0 dB</div></div><div class="buttonRow" style="margin-top:10px;"><button id="sceneMute">Mute Scene bed</button><button id="sceneSolo">Solo Scene bed</button></div><div id="sceneAnalysis" class="smallNote">Source K/LUFS-style estimate: --</div></div>
+    <div class="sourceCard ambient"><div class="sourceTitle"><h2>Cabin ambient</h2><span id="ambientState">brown · generated on start</span></div><div class="buttonRow" style="margin-bottom:10px;"><span class="smallNote" style="margin:0 6px 0 0;">Ambient source</span><button id="ambientSourceBrown" class="active">Generated brown 20 Hz HP</button><button id="ambientSourceFile">File</button></div><div class="buttonRow" style="margin-bottom:10px;"><span class="smallNote" style="margin:0 6px 0 0;">Cabin tone</span><button data-ambient-preset="full">Full</button><button data-ambient-preset="soft">Soft 2 kHz</button><button data-ambient-preset="warm" class="active">Warm 800 Hz</button><button data-ambient-preset="hvac">HVAC band</button></div><div class="fileRow" id="ambientFileRow" style="display:none;"><label class="fileButton" for="ambientFile">Select ambient file</label><span id="ambientFileName" class="fileName">No file selected</span><input id="ambientFile" type="file" accept="audio/*" hidden /></div><div class="smallNote">Generated brown is the default cabin-noise baseline. 20 Hz high-pass removes DC/subsonic drift while keeping more low-frequency rumble than the 50 Hz HP Scene brown.</div><div class="controlRow"><label for="ambientGain">Ambient gain</label><input id="ambientGain" type="range" min="-80" max="12" step="0.5" value="-80" /><div id="ambientGainValue" class="value">−80.0 dB</div></div><div class="buttonRow" style="margin-top:10px;"><button id="ambientMute">Mute Ambient</button><button id="ambientSolo">Solo Ambient</button></div><div id="ambientAnalysis" class="smallNote">Generated ambient K/LUFS-style estimate: --</div></div>
+  </section>
+
+  <section class="controlBox wide labOnly"><div class="smallNote">Presentation output reference is set in Demo setup. It remains post-measurement: it changes listening level only, never Program A reference or protection.</div><div id="monitorPostMonitor" class="smallNote">Presentation output post-gain: RMS -- · 1 s peak --</div></section>
+  <div id="contentAnalysisPlacement" class="wide labOnly"></div>
+
+  <section id="roomMeterPanel" class="controlBox wide labOnly" style="margin-top:14px;"><div class="scopeHeader"><div><h2>Room noise meter · approximate</h2><div class="smallNote" style="margin:4px 0 0;">Start with a 63 dB(A) voice reference at 0.5 m. Microphone is measurement-only.</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;"><button id="roomMeterStart" type="button">Start room meter</button><button id="roomMeterStop" type="button" disabled>Stop microphone</button></div></div><div id="roomMeterStatus" class="smallNote" style="margin:0 0 10px;">Microphone off · start with a 63 dB(A) voice reference at 0.5 m.</div><div style="display:flex;gap:18px;align-items:stretch;flex-wrap:wrap;"><div class="metric" style="width:min(540px,100%);"><div class="label">Room level · live</div><div id="roomMeterAValue" class="number">—</div><div style="position:relative;height:10px;background:#24303a;border-radius:99px;overflow:hidden;margin-top:12px;"><div id="roomMeterFullFill" style="position:absolute;inset:0 auto 0 0;height:100%;width:0;background:#9fd0ff;opacity:.32;"></div><div id="roomMeterAFill" style="position:absolute;inset:0 auto 0 0;height:100%;width:0;background:#7ac9bd;"></div></div></div><div class="metric" style="min-width:240px;flex:1;"><div class="label">Room summary</div><div id="roomMeterFullValue" class="smallNote">C / full band —</div><div id="roomMeterPeakValues" class="smallNote" style="margin-top:8px;">Peak(A) — · Peak(C) —</div><div id="roomMeterSuggestion" class="smallNote" style="margin-top:8px;margin-bottom:0;">Room condition appears after calibration.</div></div></div></section>
+
+  <h2 class="labSectionTitle labOnly">Lab diagnostics</h2>
+  <section class="readoutBox wide labOnly"><div class="metricGrid"><div class="metric programAMetric"><div class="label">Program A · live K, 3 s</div><div id="programALufs" class="number">--</div><div class="smallNote">Listener A programme contribution</div></div><div class="metric sceneMetric"><div class="label">Rendered Scene</div><div id="sceneLufs" class="number">--</div><div class="smallNote">source estimate + scene gain</div></div><div class="metric ambientMetric"><div class="label">Rendered Ambient</div><div id="ambientLufs" class="number">--</div><div class="smallNote">generated source estimate + ambient gain</div></div><div class="metric deltaMetric"><div class="label">Scene − Program A</div><div id="deltaLu" class="number">--</div><div class="smallNote">relative rendered level at Listener A</div></div><div class="metric sumMetric"><div class="label">Live SUM K, 3 s</div><div id="sumLufs" class="number">--</div><div class="smallNote">measured from the actual summed signal</div></div></div></section>
+
+  <section class="about wide labOnly"><strong>Research focus:</strong> Evaluate how cabin ambient and optional Scene content affect perceived Program A clarity and bass feelness, and how low-band compression and limiting change that balance. This is an exploratory A-only test lab; its controls and digital level estimates support listening tests, not validated acoustic or safety measurements.</section>
+  <pre id="status" class="status wide labOnly">Choose Program A and a Scene bed. Cabin ambient defaults to generated warm brown noise (800 Hz).</pre>
+  <div class="footer wide labOnly">Experimental K/LUFS-style estimates; not certified BS.1770 / EBU R128.</div>
+      <button id="hideAdvancedDetails" class="hideAdvancedDetails" type="button">Hide advanced details</button>
+    </div>
+  </div>
+
+<dialog id="releaseInfoDialog" class="releaseInfoDialog" aria-labelledby="releaseInfoTitle">
+  <div class="releaseInfoHeader"><span class="releaseStatus">EXPERIMENTAL · PRE-RELEASE BUILD</span><button id="releaseInfoClose" class="releaseInfoClose" type="button" aria-label="Close version information">×</button></div>
+  <h2 id="releaseInfoTitle">Headrest Listening Test Lab v14.11</h2>
+  <p>After Device vol check, the fixed-volume reminder stays visible while the demo fades in. Playback starts three seconds after the reminder appears.</p>
+  <p class="releaseInfoHint">Long-press the Lab Settings heading to reveal or hide advanced details.</p>
+  <p class="releaseInfoCopyright">© Jukka T. Linjama 2026</p>
+  <div class="releaseInfoActions"><button id="labSettingsOpen" type="button">LAB SETTINGS</button></div>
+</dialog>
+
+<dialog id="hwSetupDialog" class="hwSetupDialog" aria-labelledby="hwSetupTitle">
+  <section id="hwSetupCard" class="demoHwWizard">
+    <div class="hwWizardHeader"><h2 id="hwSetupTitle">Device vol check</h2><button id="hwSetupCancel" class="hwSetupClose" type="button" aria-label="Close device volume check">×</button></div>
+    <div id="hwSetupSequence">
+      <section id="hwOrientationPanel" class="hwWizardPanel">
+        <p>Ready to set device volume?</p><p class="hwWizardHint">Quiet test sound · looping</p>
+        <button id="hwSetupLoudStart" type="button">1. START VOL CHECK</button>
+      </section>
+      <section id="hwLoudPanel" class="hwWizardPanel" hidden>
+        <p>Volume OK for demo max?</p><p class="hwWizardHint">Strong test sound · looping</p>
+        <button id="hwSetupContinue" type="button">2. VOL OK · CONTINUE TO DEMO</button>
+      </section>
+      <div class="buttonRow hwWizardTransport"><button id="demoHwCueStop" class="secondary" type="button">STOP TEST</button></div>
+      <div id="hwSetupFeedback" class="hwSetupFeedback" aria-live="polite"></div>
+    </div>
+  </section>
+</dialog>
+<div id="demoHwSetupNotice" class="demoHwSetupNotice" role="status" aria-live="polite" hidden>
+  <strong>DEMO UPPER LIMIT SET</strong>
+  <p>Keep device volume fixed. Use app controls only for volume. If you change device volume, run Device vol check again.</p>
+</div>
+<script type="module" src="./spill-demo-app.js?rev=v14.11"></script>
+</body>
+</html>

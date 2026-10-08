@@ -1,0 +1,1094 @@
+/* Headrest Listening / Background Scene Lab v10.3
+ * EN: Styles are separated from the host so presentation changes do not require editing the audio graph.
+ */
+:root {
+  --bg: #111;
+  --panel: #181818;
+  --panel2: #151a1f;
+  --border: #383838;
+  --text: #eee;
+  --muted: #aaa;
+  --accent: #9fd0ff;
+  --spill: #f2c36b;
+  --scene: #9fd0ff;
+  --ambient: #c7b5ff;
+  --sum: #9ff0bb;
+  --track: #555;
+  --fill: #cfcfcf;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+h1, h2, h3, p { margin-top: 0; }
+
+.wide {
+  width: 100%;
+  max-width: 1480px;
+}
+
+.header {
+  text-align: center;
+  position: relative;
+}
+
+.header h1 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demoSpeedControl button { transition:background .78s cubic-bezier(.22,1,.36,1), border-color .78s cubic-bezier(.22,1,.36,1), color .78s cubic-bezier(.22,1,.36,1), box-shadow .78s cubic-bezier(.22,1,.36,1), opacity .78s ease, outline-color .78s ease, outline-offset .78s ease, filter .78s ease; }
+
+.labSectionTitle {
+  width: 100%;
+  max-width: 1480px;
+  margin: 16px 0 -2px;
+  color: #cfe7ff;
+  font-size: 16px;
+}
+/* EN: The setup card exposes demo decisions, not the deeper diagnostic instruments. */
+.demoSetupGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.demoSetupItem { min-width:0; padding:10px; border:1px solid rgba(159,208,255,.18); border-radius:8px; background:#14191d; }
+.demoSetupItem .label { display:block; color:#9fb7c6; font-size:10px; font-weight:700; letter-spacing:.08em; }
+.demoSetupItem strong { display:block; margin-top:5px; overflow:hidden; color:#e9f5f7; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.demoSetupItem .smallNote { margin:5px 0 0; }
+.demoSetupReady { color:#9ff0bb !important; }
+.demoSetupReady.warning { color:#ffd39b !important; }
+/* EN: These compact summaries reuse observer data; they do not create a second analysis path. */
+/* EN: Full-band PRE is a narrow roof above the broader low-band energy; neither is a tactile measurement. */
+.demoContentMirror { display:grid; grid-template-rows:14px 1px 29px; gap:2px; margin-top:8px; padding:3px 4px; border-radius:4px; background:#0b1114; }
+.demoContentHistory { display:flex; gap:2px; }
+.demoContentHistory span { position:relative; flex:1; min-width:3px; height:3px; border-radius:1px; opacity:.25; transition:height .16s linear,opacity .16s linear; }
+.demoContentHistory.top { align-items:end; }
+.demoContentHistory.top span { background:transparent; }
+.demoContentHistory.top span::before { content:''; position:absolute; left:29%; bottom:0; width:42%; height:100%; border-radius:1px; background:#6fc9c4; }
+.demoContentBaseline { background:rgba(220,236,236,.28); }
+.demoContentHistory.low { align-items:start; }
+.demoContentHistory.low span { background:#d6a94c; }
+.demoContentHistory.low span::after { content:''; position:absolute; right:1px; top:0; width:38%; height:var(--out-height,0px); border-radius:1px; background:#ffe3a3; }
+.demoProtectionRail { position:relative; height:8px; margin-top:10px; overflow:hidden; border-radius:99px; background:#302623; }
+.demoProtectionZero { position:absolute; z-index:1; top:-2px; bottom:-2px; left:60%; width:1px; background:rgba(240,245,245,.8); }
+.demoProtectionFill { position:absolute; top:0; left:0; width:0%; height:100%; border-radius:99px; background:#e08066; transition:width .12s linear,left .12s linear; }
+.demoProtectionFill.boost { background:#65c79d; }
+.demoProtectionFill.reduction { background:#e08066; }
+.demoProtectionTicks { position:relative; display:flex; justify-content:space-between; margin-top:5px; color:#c7a8a0; font:10px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.demoProtectionTicks span:nth-child(2) { position:absolute; left:60%; transform:translateX(-50%); }
+.demoPresentationLevel { display:flex; align-items:center; gap:7px; width:100%; margin-top:9px; }
+.demoPresentationLevel .labDemoVolumeControl { position:static; display:flex; flex:1; flex-direction:row; align-items:center; gap:6px; width:auto; height:auto; min-height:31px; padding:3px 4px; border:1px solid rgba(255,255,255,.16); border-radius:7px; background:rgba(0,0,0,.42); }
+.demoPresentationLevel .demoVolStep { flex:0 0 56px; min-height:23px; padding:3px 2px; font-size:10px; font-weight:700; }
+.demoPresentationLevel .demoVolumeSegments { flex:1; width:auto; height:8px; flex-direction:row-reverse; gap:2px; }
+.demoPresentationLevel .demoVolumeSegments span { flex:1; height:6px; }
+@media (max-width:760px) { .demoSetupGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .demoSetupTransfer { grid-column:span 2; } }
+
+.demoPlaylistToolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 10px; }
+.demoPlaylistList { display:grid; gap:6px; }
+.demoPlaylistItem { display:flex; align-items:center; gap:10px; min-width:0; padding:8px 10px; border:1px solid var(--border); border-radius:7px; background:#141414; }
+.demoPlaylistItem.active { border-color:rgba(126,243,221,.52); background:rgba(9,35,33,.64); }
+.demoPlaylistIndex { width:20px; color:#8fa3a7; font-size:12px; text-align:right; }
+.demoPlaylistName { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.demoPlaylistMeta { color:#9ba8a9; font-size:11px; white-space:nowrap; }
+.demoPlaylistDetailsButton,.demoPlaylistRemove { padding:4px 8px; font-size:11px; }
+.demoPlaylistDetailsButton { border-color:rgba(159,208,255,.42); color:#cfe7ff; }
+.demoPlaylistDetails { display:flex; align-items:stretch; flex-direction:column; gap:8px; margin:-2px 0 2px; padding:8px 10px 8px 38px; border-left:1px solid rgba(159,208,255,.28); background:rgba(18,27,32,.72); }
+.demoPlaylistAnalysisMetrics { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; min-width:0; color:#b9c5c5; font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.demoPlaylistAnalysisMetrics span { min-width:0; overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
+.demoPlaylistDetails .demoPlaylistDetailsButton,.demoPlaylistDetails .demoPlaylistRemove { align-self:flex-end; }
+@media (max-width:760px) { .demoPlaylistDetails { padding-left:10px; } .demoPlaylistAnalysisMetrics { width:100%; } }
+
+.about {
+  background: var(--panel2);
+  border: 1px solid #36506a;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.about strong { color: #cfe7ff; }
+
+.sourceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sourceCard,
+.controlBox,
+.readoutBox,
+.scopeBox {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.sourceCard.programA { border-color: rgba(242,195,107,0.55); }
+.sourceCard.scene { border-color: rgba(159,208,255,0.55); }
+.sourceCard.ambient { border-color: rgba(199,181,255,0.55); }
+
+.sourceTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sourceTitle h2 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.programA .sourceTitle h2 { color: var(--spill); }
+.scene .sourceTitle h2 { color: var(--scene); }
+.ambient .sourceTitle h2 { color: var(--ambient); }
+
+.fileRow,
+.buttonRow,
+.transportRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button,
+.fileButton {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 9px;
+  border: 1px solid #555;
+  background: #242424;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled),
+.fileButton:hover { background: #303030; }
+
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button.active {
+  border-color: #ff9f2a;
+  color: #ffd39b;
+  box-shadow: 0 0 0 1px rgba(255,159,42,0.28);
+}
+
+.fileName {
+  color: var(--muted);
+  min-width: 120px;
+  max-width: 310px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.controlRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.controlRow label,
+.controlRow .value {
+  font-size: 14px;
+}
+.controlRow input[type="range"] { grid-column: 1 / -1; min-width: 0; }
+
+.value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  text-align: right;
+  white-space: nowrap;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--track);
+  cursor: pointer;
+}
+#programSelect { background:#17120a; color:#ffd39b; border:1px solid #d59b37; border-radius:8px; padding:7px 10px; font-size:16px; }
+#programPrev, #programNext { border-color:#d59b37; color:#ffd39b; }
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f2f2f2;
+  border: 1px solid #888;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metric {
+  background: #141414;
+  border: 1px solid #303030;
+  border-radius: 9px;
+  padding: 10px;
+  min-height: 88px;
+}
+
+.metric .label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+.metric .number {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.metric.programAMetric .number { color: var(--spill); }
+.metric.sceneMetric .number { color: var(--scene); }
+.metric.ambientMetric .number { color: var(--ambient); }
+.metric.sumMetric .number { color: var(--sum); }
+
+.metric.deltaMetric {
+  border-color: #5b5b5b;
+}
+
+.metric.deltaMetric .number {
+  font-size: 30px;
+}
+
+.smallNote {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 7px;
+}
+
+/* EN: Make loss of digital peak headroom unambiguous in Lab diagnostics. */
+.smallNote.warning {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.scopeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.scopeHeader h2 {
+  font-size: 14px;
+  margin: 0;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 300px;
+  background: #000;
+  border: 1px solid #303030;
+}
+
+.cabinTestBox {
+  margin-top: 14px;
+}
+
+.cabinTestHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.cabinTestHeader h2 {
+  font-size: 14px;
+  margin: 0;
+}
+
+#cabinTest {
+  /* EN: Render the cabin at its native aspect ratio; the stage crops its sides. */
+  width:373.33px;
+  max-width:none;
+  height:245px;
+  margin-left:50%;
+  transform:translateX(-50%);
+}
+
+/* EN: Desktop keeps cabin controls beside the visual and reserves a full-width lower meter row. */
+.cabinVisualGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns:120px minmax(0,360px) 120px;
+  column-gap:22px;
+  row-gap:10px;
+  align-items:start;
+  justify-content:center;
+  width:100%;
+  margin:0 auto;
+}
+
+.listenerCard {
+  background: #111;
+  border: 1px solid #383838;
+  border-radius: 9px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listenerCard.active { border-color: #ff9f2a; box-shadow: 0 0 0 1px rgba(255,159,42,.28); }
+.listenerCard h3 { font-size: 14px; margin: 0; }
+.listenerValue { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 12px; }
+.listenerValue strong { color: var(--text); font-family: "SFMono-Regular", Consolas, monospace; font-weight: 500; white-space: nowrap; }
+.listenerCard button { margin-top: auto; width: 100%; }
+
+.status {
+  background: #141414;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  color: #ccc;
+  white-space: pre-wrap;
+}
+
+.footer {
+  color: #777;
+  font-size: 12px;
+  text-align: right;
+}
+
+.modeToggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 12px;
+  padding: 6px 9px;
+}
+
+body.demoMode .labOnly {
+  display: none !important;
+}
+.cabinTestHeader { display: none; }
+
+.demoFooter {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:center;
+  gap:8px;
+}
+.releaseInfoOpen { min-height:44px; padding:8px 10px; border:0; border-radius:6px; background:transparent; color:#c3d3d6; font-size:12px; cursor:pointer; text-align:right; justify-self:end; }
+.releaseInfoOpen:hover { color:#e6f5f7; background:rgba(255,255,255,.06); }
+.demoFooter > #hwSetupStart { justify-self:start; min-width:0; width:auto; margin:0; }
+.demoFooter > #viewModeToggle { position:static; justify-self:center; min-width:0; min-height:44px; margin:0; padding:8px 12px; font-size:12px; white-space:nowrap; }
+body.demoMode .cabinTestBox { order: 1; }
+body.demoMode .demoFooter { order: 2; }
+/* EN: Keep the return-to-demo action at the left edge in both workspace modes. */
+body:not(.demoMode) .demoFooter { justify-content: initial; }
+body:not(.demoMode) .demoFooter .footer { display: none; }
+body.demoMode #viewModeToggle { border-color:#555; box-shadow:none; color:#ddd; }
+body:not(.demoMode) #viewModeToggle { border-color:#45c9c3; color:#bff5f1; box-shadow:0 0 0 1px rgba(69,201,195,.22); }
+
+/* EN: The presentation controls occupy their own transport column, so they never overlap Cabin Noise. */
+.demoTransport { position:relative; display:grid; grid-template-columns:minmax(220px,360px) minmax(220px,360px); column-gap:48px; justify-content:space-between; align-items:start; margin:0 0 22px; }
+.demoPlaybackControls { display:grid; justify-items:stretch; gap:8px; min-width:0; }
+.demoProgramControl { position:relative; display:grid; justify-items:stretch; gap:5px; width:100%; }
+.demoProgramLabel { color:#b9c5c5; font-size:11px; font-weight:700; letter-spacing:.10em; }
+/* EN: Program navigation writes only to the native select, which remains the single content state. */
+.demoProgramChooser { display:flex; align-items:center; width:100%; }
+.demoProgramChooser #cabinProgramSelect { flex:1; min-width:0; max-width:none; font-size:13px; }
+.demoProgramNavigation { display:grid; grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr); gap:6px; width:100%; }
+.demoProgramStep { min-width:0; padding:5px 7px; font-size:15px; line-height:1.1; }
+.demoProgramPlay { padding:5px 2px; font-size:15px; line-height:1.1; }
+/* EN: Program A remains visually centered within the combined transport group. */
+.demoPrimaryAction { position:absolute; top:0; left:calc(50% + 198px); }
+.demoPresentationControl { position:static; grid-column:2; justify-self:end; width:min(100%,360px); display:grid; justify-items:stretch; gap:7px; padding:0; border:0; border-radius:0; background:transparent; }
+.presentationControlTitle,.demoProgramLabel { color:#b9c5c5; font-size:11px; font-weight:700; letter-spacing:.10em; }
+.presentationControlTitle { text-align:right; }
+.presentationLoopToggle { width:100%; padding:6px 4px; font-size:10px; font-weight:700; letter-spacing:.05em; border-color:#4e6669; color:#bff5f1; }
+.presentationLoopToggle.active { border-color:#45c9c3; color:#bff5f1; background:rgba(17,68,69,.52); }
+.presentationControlSurface { position:relative; width:100%; height:92px; }
+.presentationMuteControl { position:absolute; inset:0 0 auto; width:100%; min-height:54px; padding:8px 5px; font-size:12px; font-weight:700; line-height:1.12; letter-spacing:.04em; border-color:transparent; color:#ffd39b; background:rgba(54,37,14,.62); box-shadow:none; }
+.presentationMuteControl.active { inset:0; z-index:2; min-height:0; padding:10px 14px; display:flex; align-items:center; justify-content:center; gap:12px; border-color:#ff9f2a; color:#ffd39b; background:rgba(27,22,14,.96); box-shadow:0 0 0 1px rgba(255,159,42,.24),0 10px 24px rgba(0,0,0,.32); }
+.presentationMuteControl:disabled { opacity:.36; cursor:default; }
+.presentationMuteControl .demoMutedIcon { width:19px; height:19px; margin-right:5px; vertical-align:middle; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.9; }
+.presentationMuteControl .demoMuteCross { stroke:#ffb45a; stroke-width:2.5; }
+.presentationMuteControl.active .demoMutedIcon { width:52px; height:52px; margin:0; stroke-width:2.8; animation:demoMutedIconPulse 1.2s ease-in-out infinite; }
+.presentationMuteControl.active .demoMuteCross { stroke:#ffd39b; stroke-width:3.5; }
+.presentationMuteControl.active span { font-size:16px; line-height:1.08; text-align:left; }
+@keyframes demoMutedIconPulse { 0%,100% { opacity:.22; } 50% { opacity:1; } }
+.presentationLevelControl { position:static; right:auto; bottom:auto; z-index:auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:4px; width:100%; min-height:20px; padding:5px 0 0; border:0; border-top:1px solid rgba(255,255,255,.13); border-radius:0; background:transparent; }
+.presentationLevelControl .demoVolStep { width:auto; min-width:0; padding:1px 0; border:0; border-radius:0; background:transparent; color:#aebcbc; font-size:7px; line-height:1; letter-spacing:.04em; }
+.presentationLevelControl .demoVolStep:hover { color:#d8eeee; background:transparent; }
+.presentationLevelControl .demoVolumeSegments { position:relative; width:100%; height:22px; display:flex; flex-direction:row; gap:2px; align-items:flex-start; overflow:visible; }
+.presentationLevelControl .demoVolumeSegments span { flex:1; height:4px; border:0; border-radius:1px; background:#383d3d; }
+.presentationLevelControl .demoVolumeSegments span.on { background:#62797c; }
+.presentationLevelControl .demoVolumeSegments span.limiterStep { background:linear-gradient(90deg,rgba(16,27,31,.35) 0%,rgba(16,27,31,.17) 52%,rgba(16,27,31,0) 100%),#62797c; }
+.presentationLevelControl .demoVolumeTrace { position:absolute; top:6px; left:0; width:100%; height:8px; pointer-events:none; overflow:visible; }
+.presentationLevelControl .demoVolumeTrace i { position:absolute; height:1px; border-radius:1px; background:#baf6ed; box-shadow:0 0 3px rgba(126,230,215,.42); transform:translateY(-50%); }
+/* EN: Presentation level is the same compact horizontal control as Setup, but is secondary to narration and looping. */
+.demoPresentationControl .presentationLevelControl { position:absolute; inset:auto 0 0; right:auto; bottom:0; z-index:1; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:5px; width:100%; min-height:31px; padding:4px 0 0; border:0; border-top:1px solid rgba(255,255,255,.13); border-radius:0; background:transparent; }
+.demoPresentationControl .presentationLevelControl .demoVolStep { width:auto; min-width:0; padding:2px 0; border:0; border-radius:0; background:transparent; color:#aebcbc; font-size:8px; font-weight:700; line-height:1; letter-spacing:.04em; }
+.demoPresentationControl .presentationLevelControl .demoVolStep:hover { color:#d8eeee; background:transparent; }
+.demoPresentationControl .presentationLevelControl .demoVolumeSegments { height:15px; flex-direction:row-reverse; align-items:flex-start; }
+.demoPresentationControl .presentationLevelControl .demoVolumeSegments span { height:4px; }
+.demoPresentationControl .presentationLevelControl .demoVolumeSegments span.on { background:#62797c; }
+.demoPresentationControl .presentationLevelControl .demoVolumeSegments span.limiterStep { background:linear-gradient(90deg,rgba(16,27,31,.60) 0%,rgba(16,27,31,.30) 52%,rgba(16,27,31,0) 100%),#62797c; }
+/* EN: The presentation surface reserves its height in every state, preventing the cabin from moving. */
+.demoTransport #startBoth { min-width:112px; font-weight:600; border-color:#d59b37; color:#ffd39b; }
+.modeToggle { position:static; font-size:11px; padding:5px 8px; white-space:nowrap; }
+/* EN: A modestly wider workspace supports two 120 px cabin-side control cards. */
+.cabinTestBox.wide { max-width:760px; }
+/* EN: The stage is a symmetric crop viewport, not a horizontal Canvas scale. */
+.cabinVisualStage { position:relative; grid-column:2; grid-row:1; width:min(100%,360px); min-width:0; overflow:hidden; justify-self:center; }
+/* EN: Its children participate directly in the desktop cabin grid; mobile restores a local grid. */
+.listenerLevelControls { display:contents; }
+.listenerLevelControls .demoFeelnessControl { grid-column:1; grid-row:1; align-self:stretch; }
+.listenerLevelControls .demoSpeedControl { grid-column:3; grid-row:1; align-self:stretch; }
+.listenerLevelControls .miniLevelScope { grid-column:1 / -1; grid-row:2; max-width:none; width:100%; }
+/* EN: This DOM caption sits in the empty front-seat area; Canvas stays visual-only. */
+.listenerCompareTitle { position:absolute; z-index:2; top:42px; left:0; width:100%; margin:0; color:#bff5f1; font-size:11px; font-weight:700; letter-spacing:.10em; text-align:center; pointer-events:none; }
+body.demoMode .listenerDetails, body:not(.demoMode) .listenerDetails { display:none !important; }
+body.demoMode #cabinTest, body:not(.demoMode) #cabinTest { grid-column:1; }
+.demoVolumeControl { position:absolute; right:202px; bottom:12px; z-index:5; width:46px; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 4px; border:1px solid rgba(255,255,255,.14); border-radius:7px; background:rgba(0,0,0,.70); }
+.demoVolStep { width:36px; padding:3px 2px; font-size:11px; font-weight:600; }
+.demoVolumeSegments { width:18px; height:42px; display:flex; flex-direction:column; justify-content:space-between; }
+.demoVolumeSegments span { display:block; height:4px; border-radius:2px; background:#333; border:1px solid #4b4b4b; transition:background .08s,opacity .08s; }
+.demoVolumeSegments span.on { background:#d8d8d8; border-color:#efefef; }
+/* EN: Highlight only the affected 6 dB volume segments; the control itself stays neutral. */
+.demoVolumeSegments span.limiterStep { background:#ff6b6b; border-color:#ffaaa0; }
+.demoDuck { width:48px; padding:5px 3px; font-size:11px; }
+.demoDuck.active { border-color:#ff9f2a; color:#ffd39b; }
+.mutedBadge { display:none; white-space:nowrap; font-size:11px; font-weight:700; color:#ffd39b; letter-spacing:.04em; margin-left:2px; }
+.mutedBadge.active { display:block; animation:muteBlink .85s steps(2,start) infinite; }
+@keyframes muteBlink { 50% { opacity:.25; } }
+body:not(.demoMode) .demoVolumeControl, body:not(.demoMode) .demoListenerButton { display:none; }
+/* EN: v7.38 uses Program A itself as the quiet-start and muted-content surface. */
+.demoProgramControl > .demoDuck { width:100%; min-height:34px; padding:6px 10px; border-color:rgba(255,211,155,.42); color:#f4d2a0; background:rgba(32,24,13,.42); font-size:11px; font-weight:700; letter-spacing:.06em; }
+.demoProgramControl > .demoDuck.active { position:absolute; inset:0; z-index:5; width:100%; min-height:0; padding:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; border-color:rgba(255,211,155,.58); background:rgba(8,8,8,.93); color:#ffd39b; font-size:18px; line-height:1.1; }
+.demoProgramControl > .demoDuck.active > * { pointer-events:none; }
+.demoProgramControl > .demoDuck.active .demoDuckIcon { width:62px; height:62px; }
+.demoPrimaryAction { width:76px; min-width:76px; display:block; }
+.demoPrimaryAction .demoVolumeControl { position:static; z-index:auto; width:76px; min-height:144px; height:144px; padding:7px 5px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:4px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:rgba(0,0,0,.58); }
+.demoPrimaryAction .demoVolStep { width:64px; min-height:29px; padding:5px 2px; font-size:12px; font-weight:700; }
+.demoPrimaryAction .demoVolumeSegments { width:24px; height:42px; }
+.demoPrimaryAction .demoVolumeSegments span { height:3px; }
+body:not(.demoMode) .demoPrimaryAction { display:block; }
+/* EN: The Lab level control is now part of Presentation & Safety, not A → B transfer. */
+.demoOutputSettings { display:flex; align-items:stretch; width:100%; }
+body:not(.demoMode) .demoOutputSettings .labDemoVolumeControl { display:flex; }
+    /* EN: The level scope is a DOM rail; its visible plot is capped at the same 560 px as the cabin stage. */
+.miniLevelScope { position:relative; grid-column:auto; justify-self:stretch; width:100%; max-width:360px; height:126px; margin:0; padding-top:8px; overflow:visible; border:0; border-top:1px solid rgba(255,255,255,.10); border-radius:0; background:rgba(0,0,0,.42); pointer-events:none; }
+.miniLevelScope canvas { display:block; width:100%; height:110px; border:0; background:transparent; }
+/* EN: A VOL reuses the legacy vertical volume segments beside the live level plot. */
+.demoAContentVolumeControl { position:absolute; left:2px; top:-10px; z-index:9; width:62px; height:146px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:2px; padding:3px 2px; border:1px solid rgba(255,255,255,.14); border-radius:7px; background:rgba(0,0,0,.70); pointer-events:auto; }
+.demoAContentVolumeHeader { width:100%; display:flex; flex-direction:column; align-items:center; gap:1px; color:#aebcbc; font-size:9px; font-weight:700; line-height:1.1; letter-spacing:.05em; }
+.demoAContentVolumeHeader output { color:#eee; font:10px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:0; }
+.demoAContentVolumeControl button { width:54px; min-height:27px; padding:4px 2px; font-size:10px; font-weight:700; }
+.demoAContentVolumeSegments { width:20px; height:72px; display:flex; flex-direction:column-reverse; justify-content:space-between; }
+.demoAContentVolumeSegments span { display:block; height:3px; border-radius:2px; background:#333; border:1px solid #4b4b4b; transition:background .08s,border-color .08s; }
+.demoAContentVolumeSegments span.on { background:#d8d8d8; border-color:#efefef; }
+
+body.demoMode .miniLevelScope .demoListenerButton, body:not(.demoMode) .miniLevelScope .demoListenerButton { position:absolute; top:5px; bottom:auto; transform:translateX(-50%); min-width:112px; padding:7px 10px; font-size:12px; z-index:8; pointer-events:auto; }
+body.demoMode .miniLevelScope #listenA, body:not(.demoMode) .miniLevelScope #listenA { left:43%; right:auto; }
+.demoFeelnessControl { position:static; z-index:8; display:flex; flex-direction:column; align-items:stretch; gap:5px; width:auto; padding:9px; border:0; border-radius:0; background:rgba(28,22,12,.84); pointer-events:auto; }
+.demoFeelnessControl .feelnessDivider { width:100%; margin:9px 0 6px; border-top:1px solid rgba(242,195,107,.28); }
+.demoFeelnessControl .feelnessTitle { margin-bottom:12px; color:#f2c36b; font-size:10px; font-weight:700; letter-spacing:.08em; line-height:1.25; text-align:center; }
+.demoFeelnessControl button { min-width:0; width:100%; padding:7px 5px; font-size:11px; font-weight:700; border-color:transparent; background:transparent; color:#e7d7a8; }
+.demoFeelnessControl button:hover:not(:disabled) { background:rgba(242,195,107,.10); }
+.demoFeelnessControl .feelnessHint { display:none; }
+.demoFeelnessControl button.active { border-color:#f2c36b; color:#f2c36b; background:#352b18; box-shadow:none; }
+.demoFeelnessControl .systemBoost { order:0; margin:0; border-color:transparent; color:#e7d7a8; font-size:11px; font-weight:700; line-height:1.15; }
+.demoFeelnessControl .systemBoost:disabled { opacity:.32; }
+/* EN: Feelness and raw boost apply only to Listener A; B is an intentionally passive comparison view. */
+/* EN: The automatic sequence reserves Feelness for a separate manual demonstration. */
+.demoFeelnessControl.boostActive .systemBoost { background:rgba(8,35,32,.88); border-color:#7ef3dd; color:#e5fffa; animation:rawBoostBreath 1.55s ease-in-out infinite; }
+.demoVolumeControl.systemBoostActive { border-color:#7ef3dd; box-shadow:0 0 0 1px rgba(126,243,221,.24),0 0 18px rgba(69,201,195,.22); }
+.demoVolumeSegments span.boostStep { background:#7ef3dd; border-color:#d6fffa; animation:rawBoostBreath 1.55s ease-in-out infinite; }
+@keyframes rawBoostBreath { 0%,100% { box-shadow:0 0 0 1px rgba(126,243,221,.18),0 0 10px rgba(69,201,195,.12); } 50% { box-shadow:0 0 0 3px rgba(126,243,221,.38),0 0 22px rgba(69,201,195,.34); } }
+.demoSpeedControl { position:static; z-index:7; display:flex; flex-direction:column; align-items:stretch; gap:5px; width:auto; padding:9px; border:0; border-radius:0; background:rgba(12,20,24,.84); pointer-events:auto; }
+.demoSpeedControl .speedTitle { margin-bottom:6px; color:#c7b5ff; font-size:10px; font-weight:700; letter-spacing:.08em; text-align:center; }
+.demoSpeedControl button { padding:7px 5px; font-size:13px; border-color:transparent; background:transparent; }
+.demoSpeedControl button:hover:not(:disabled) { background:rgba(199,181,255,.10); }
+.demoSpeedControl button.active { color:#c7b5ff; border-color:#c7b5ff; background:#292238; box-shadow:none; }
+/* EN: Canvas-drawn labels make the seat rectangle the only visible listener selection surface. */
+body.demoMode .cabinVisualGrid .demoListenerButton, body:not(.demoMode) .cabinVisualGrid .demoListenerButton { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media (max-width:900px) { .sourceGrid,.metricGrid{grid-template-columns:1fr}.controlRow{grid-template-columns:1fr}.value{text-align:left} }
+/* EN: Mobile changes only the DOM controls; the Canvas stage keeps the desktop geometry contract. */
+@media (max-width:680px) { .demoTransport{grid-template-columns:minmax(0,1fr) 112px;column-gap:8px;row-gap:0}.demoPrimaryAction{position:static;justify-self:stretch;width:76px;min-width:76px}.demoPresentationControl{grid-column:2;grid-row:1 / span 2;position:static;justify-self:stretch;width:112px}.cabinTestBox .cabinVisualGrid{grid-template-columns:minmax(0,1fr);gap:8px;justify-items:center}.cabinVisualStage{grid-column:1;grid-row:1}.listenerLevelControls{display:grid;grid-column:1;grid-row:2;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;margin-top:0}.listenerLevelControls .miniLevelScope{grid-column:1 / -1;grid-row:1;width:min(100%,360px);max-width:360px;justify-self:center}.listenerLevelControls .demoFeelnessControl{grid-column:1;grid-row:2}.listenerLevelControls .demoSpeedControl{grid-column:2;grid-row:2} }
+body.demoMode #startBoth, body.demoMode #cabinProgramSelect:focus, body.demoMode .demoVolStep:focus { border-color:#45c9c3; box-shadow:0 0 0 1px rgba(69,201,195,.22); }
+body.demoMode #startBoth { color:#bff5f1; }
+body.demoMode #cabinProgramSelect { background:#242829; color:#e8eeee; border-color:#4c5b5c; }
+#cabinProgramSelect { color:#ededed; background:#242424; border:1px solid #666; border-radius:5px; padding:5px 30px 5px 9px; color-scheme:dark; }
+#cabinProgramSelect option { color:#ededed; background:#242424; }
+/* EN: v7.2 adds background-only loop separation while the host retains audio and safety ownership. */
+/* EN: Post-guard analysis is observer-only and remains available only in Lab controls. */
+.outputAnalysisWindow { width:min(100%,520px); margin:10px 0 4px; padding:8px; border:1px solid rgba(126,230,215,.28); border-radius:8px; background:rgba(9,25,30,.72); }
+.demoFinalOutputSetup { width:min(100%,620px); margin:12px 0 0 auto; }
+.outputAnalysisHeader,.outputAnalysisValues,.outputLevelHeader { display:flex; justify-content:space-between; gap:8px; font-size:9px; letter-spacing:.07em; }
+.outputAnalysisHeader { color:#7ee6d7; font-weight:700; margin-bottom:6px; }
+.outputAnalysisHeader span:last-child,.outputAnalysisNote,.outputAnalysisLegend,.outputLevelHeader { color:#87a6ad; }
+.outputLevelHeader { margin-bottom:4px; font-weight:700; }
+.outputLevelRail { position:relative; height:13px; margin:0 24px 7px 2px; overflow:visible; border:1px solid rgba(170,205,220,.22); border-radius:2px; background:repeating-linear-gradient(90deg,rgba(170,205,220,.11) 0 1px,transparent 1px 10%); }
+.outputLevelHistory { position:absolute; inset:1px; background-image:none; pointer-events:none; }
+.outputLevelFill { position:absolute; left:0; top:4px; width:0; height:4px; background:linear-gradient(90deg,#327c78,#7ee6d7); transition:width .18s linear; }
+.outputLevelPeak { position:absolute; top:4px; width:4px; height:4px; transform:translateX(-2px); background:#fff; box-shadow:0 0 5px rgba(255,255,255,.55); }
+.outputLevelRail.guardActive .outputLevelPeak { background:#ffb36b; box-shadow:0 0 6px rgba(255,150,80,.8); }
+.outputLevelScale,.outputLevelZero { position:absolute; top:15px; color:#87a6ad; font:8px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.outputLevelScale { left:0; } .outputLevelZero { right:-23px; }
+.outputAnalysisValues { color:#d9f3ee; flex-wrap:wrap; margin:12px 0 6px; }
+.outputAnalysisPlot { display:flex; align-items:center; gap:9px; }
+.outputSpectrum { display:block; width:min(100%,260px); height:106px; border-radius:4px; background:rgba(3,11,14,.48); }
+.outputAnalysisLegend { font:9px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.04em; }
+.outputAnalysisNote { margin-top:5px; font-size:9px; text-align:right; }
+.outputGuardRow { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:8px; margin:12px 24px 1px 2px; color:#87a6ad; font:8px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.07em; }
+.outputGuardRail { position:relative; height:6px; overflow:visible; border:1px solid rgba(255,130,110,.24); border-radius:2px; background:rgba(93,45,40,.22); }
+.outputGuardFill { position:absolute; right:0; top:0; bottom:0; width:0; background:linear-gradient(270deg,#ff796b,#8e3e38); transition:width .05s linear; }
+.outputGuardLeft,.outputGuardRight { position:absolute; top:8px; color:#a18c89; font:8px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.outputGuardLeft { left:0; } .outputGuardRight { right:0; }
+.outputAnalysisValues { margin-top:17px; }
+/* EN: Keep dynamic Program A readouts from reflowing the mobile control stack. */
+.sourceCard.programA #programAState,.sourceCard.programA #protectionStatus,.sourceCard.programA #outputGuardStatus,.sourceCard.programA #protectionDemoState,.sourceCard.programA #programAAnalysis { display:block; font-variant-numeric:tabular-nums; }
+@media (max-width:760px) {
+  .sourceCard.programA #programAState { min-height:2.8em; }
+  .sourceCard.programA #protectionStatus { min-height:3em; }
+  .sourceCard.programA #outputGuardStatus { min-height:1.4em; }
+  .sourceCard.programA #protectionDemoState { min-height:2.8em; }
+  .sourceCard.programA #programAAnalysis { min-height:2.8em; }
+}
+/* EN: v7.7.2 reserves every live Program A text row that can cross a mobile wrap boundary. */
+@media (max-width:760px) {
+  .sourceCard.programA #programABuiltinRow,.sourceCard.programA #programPreMonitor { display:block; min-height:2.8em; font-variant-numeric:tabular-nums; }
+}
+  
+
+
+/* EN: v9.8 keeps presentation preparation compact and separates it from Lab diagnostics. */
+.demoSetupPresentation { grid-column:span 2; }
+.demoSetupPresentation .demoOutputSettings { margin-top:8px; }
+.demoProtectionSummary { margin-top:10px; padding-top:8px; border-top:1px solid rgba(159,208,255,.14); }
+.demoProtectionSummary strong { display:inline-block; margin:4px 0 0; color:#c8dfc1; font-variant-numeric:tabular-nums; }
+.demoProtectionRail { overflow:hidden; }
+.demoProtectionFill { position:absolute; right:0; left:auto; background:#668f62; transition:width .36s ease-out; }
+.demoProtectionTicks { color:#a9bfa7; }
+.demoSpillPresets,.demoHwPresets,.demoFeelnessPresetRow { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
+.demoSpillPresets button,.demoHwPresets button,.demoFeelnessPresetRow button { min-width:38px; padding:4px 6px; font-size:10px; }
+.demoSpillPresets button.active,.demoHwPresets button.active,.demoFeelnessPresetRow button.active { border-color:#6baca3; color:#e8fffa; background:#1c3433; }
+.demoHwReference input { width:100%; margin-top:7px; }
+.demoContentDiagnostics { max-width:620px; }
+.demoContentDiagnostics .demoSetupItem { margin-top:10px; }
+.demoVolumeSegments { position:relative; overflow:visible; }
+.demoVolumeSegments span { position:relative; z-index:1; }
+.demoVolumeRibbonFog { position:absolute; z-index:0; inset:-10px 0; overflow:hidden; pointer-events:none; }
+.demoVolumePeak { position:absolute; z-index:3; inset:-12px 0 auto; height:8px; overflow:visible; pointer-events:none; }
+.demoVolumePeakHalo { position:absolute; z-index:2; inset:auto 0 -13px; height:8px; overflow:visible; pointer-events:none; }
+.demoVolumeRibbonFogTrace { position:absolute; height:16px; border-radius:8px; background:linear-gradient(90deg,rgba(116,193,188,.16),rgba(220,255,250,.72),rgba(116,193,188,.16)); box-shadow:0 0 9px rgba(126,230,215,.24); transform:translateY(-50%); }
+.demoVolumePeakMarkerTrace { position:absolute; height:2px; border-radius:2px; background:linear-gradient(90deg,rgba(194,255,244,.10),rgba(244,255,253,.82),rgba(194,255,244,.10)); box-shadow:0 0 5px rgba(187,255,244,.42); transform:translateY(-50%); }
+.demoVolumePeakHaloTrace { position:absolute; height:2px; border-radius:2px; background:linear-gradient(90deg,rgba(194,255,244,.05),rgba(244,255,253,.58),rgba(194,255,244,.05)); box-shadow:0 0 5px rgba(187,255,244,.26); transform:translateY(-50%); }
+@media (max-width:760px) { .demoSetupPresentation { grid-column:span 2; } .demoHwReference,.demoFeelnessCheck { grid-column:span 1; } }
+
+
+/* EN: v10.9 separates customer-facing demo preparation from experimental diagnostics. */
+.demoSettingsPrimary { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-top:10px; }
+.demoSettingsPrimary .demoSetupPresentation { grid-column:auto; }
+.demoPlaylistCard .scopeHeader { align-items:flex-start; margin-bottom:10px; }
+.demoPlaylistCard .scopeHeader strong { margin-top:4px; }
+.demoPlaylistCard .demoPlaylistList { max-height:220px; overflow:auto; }
+.demoSettingsSecondary { grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:12px; }
+.demoHwCueSetup .buttonRow { margin-top:8px; }
+.demoHwCueActions { display:flex; gap:6px; }
+.demoHwCueActions button { flex:1; min-width:0; }
+.demoHwCueSetup > .secondary { width:100%; margin-top:7px; }
+.demoHwCueSetup strong.cueLocked { color:#9ff0bb; }
+.demoSettingsStart { display:flex; align-items:center; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(159,208,255,.14); }
+.labDiagnosticsTitle { margin-top:26px; padding-top:16px; border-top:1px solid rgba(159,208,255,.22); text-transform:uppercase; letter-spacing:.06em; }
+@media (max-width:760px) {
+  .demoSettingsPrimary { grid-template-columns:minmax(0,1fr); }
+  .demoSettingsSecondary { grid-template-columns:minmax(0,1fr); }
+  .demoSettingsSecondary .demoHwReference,.demoSettingsSecondary .demoFeelnessCheck { grid-column:auto; }
+}
+
+
+/* EN: v11.0 reuses the experimental Candidate presentation language in customer-facing Demo setup. */
+.demoCandidatePresentation { display:block; width:100%; margin-top:10px; }
+.demoCandidateTitle { color:#aebcbc; font:700 10px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.12em; }
+.demoCandidateControl { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; margin-top:7px; }
+.demoCandidateControl button { padding:3px 0; border:0; background:transparent; color:#aebcbc; font:700 10px/1 Arial,sans-serif; white-space:nowrap; }
+.demoCandidateSegments { position:relative; display:flex; gap:3px; min-width:0; }
+.demoCandidateSegments > span { position:relative; z-index:1; flex:1; height:5px; border-radius:1px; background:#383d3d; }
+.demoCandidateSegments > span.on { background:#f0f6f6; }
+.demoCandidateSegments > span.limiterStep { background:#5e875b; }
+.demoCandidateSegments .demoVolumePeak { position:absolute; z-index:3; inset:-12px 0 auto; height:8px; overflow:visible; pointer-events:none; }
+.demoCandidateSegments .demoVolumeRibbonFog { position:absolute; z-index:2; inset:auto 0 -13px; height:8px; overflow:visible; pointer-events:none; }
+.demoCandidateSegments .demoVolumePeakHalo { display:none; }
+.demoProtectionCombined { margin-top:14px; }
+.demoProtectionHeader { display:grid; grid-template-columns:auto auto 1fr; align-items:baseline; gap:10px; }
+.demoProtectionHeader strong { color:#b9d6ad; }
+.demoGuardFlash { justify-self:end; min-height:1em; color:#ff6f6f; font-weight:800; letter-spacing:.04em; opacity:0; }
+.demoGuardFlash.active { opacity:1; text-shadow:0 0 10px rgba(255,80,80,.42); }
+.demoProtectionCompact { width:43%; min-width:210px; margin-top:7px; }
+.demoProtectionCompact .demoProtectionRail { position:relative; width:100%; }
+.demoProtectionCompact .demoProtectionFill { right:auto; }
+.demoProtectionCompact .demoProtectionTicks { width:100%; }
+.demoProtectionCombined > .smallNote { margin-top:5px; }
+@media (max-width:760px) {
+  .demoProtectionCompact { width:62%; min-width:0; }
+}
+
+
+/* EN: v11.1 keeps guard secondary and gives the customer view the same Signal Character footprint. */
+.demoProtectionColumns { display:grid; grid-template-columns:minmax(0,1fr) minmax(120px,.55fr); gap:18px; align-items:start; }
+.demoProtectionHeader { display:flex; align-items:baseline; gap:10px; }
+.demoGuardCompact { text-align:right; min-height:38px; }
+.demoGuardCompact .label { display:block; }
+.demoGuardCompact .demoGuardFlash { display:block; margin-top:5px; min-height:1em; font-size:15px; }
+.demoOutputSpectrum { width:calc(100% - 28px); max-width:420px; margin:14px 0 0 28px; }
+.demoOutputSpectrum .outputAnalysisHeader,
+.demoOutputSpectrum .outputLevelHeader,
+.demoOutputSpectrum .outputLevelRail,
+.demoOutputSpectrum .outputGuardRow,
+.demoOutputSpectrum .outputAnalysisValues,
+.demoOutputSpectrum .outputAnalysisNote { display:none; }
+.demoOutputSpectrum .outputAnalysisPlot { margin-top:0; }
+.demoOutputSpectrum .outputSpectrum { width:100%; height:140px; }
+@media (max-width:760px) {
+  .demoProtectionColumns { grid-template-columns:minmax(0,1fr) minmax(95px,.45fr); gap:10px; }
+  .demoOutputSpectrum { width:calc(100% - 18px); max-width:none; margin-left:18px; }
+}
+
+
+/* EN: v11.2 identifies the customer spectrum before the plot and keeps protection below it. */
+.demoSpectrumHeader { display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-top:16px; }
+.demoSpectrumLegend { display:flex; gap:14px; color:#9eaaaa; font-size:10px; white-space:nowrap; }
+.demoSpectrumLegend span::before { content:''; display:inline-block; width:16px; margin-right:5px; border-top:2px solid #7fe4dc; vertical-align:middle; }
+.demoSpectrumLegend .background::before { border-top:1px dashed #b7a5ee; }
+.demoOutputSpectrum { margin-top:6px; }
+.demoOutputSpectrum + .demoProtectionCombined { margin-top:14px; padding-top:12px; border-top:1px solid rgba(159,208,255,.14); }
+@media (max-width:760px) {
+  .demoSpectrumHeader { align-items:flex-start; flex-direction:column; gap:5px; }
+  .demoSpectrumLegend { white-space:normal; flex-wrap:wrap; }
+}
+
+/* EN: v11.3 spectrum legend distinguishes true Program A pre/post protection measurements. */
+.demoSpectrumLegend .pre::before { border-top:3px solid rgba(190,196,199,.7); }
+
+
+.outputDiagnosticsDetails { margin-top:12px; border:1px solid rgba(126,230,215,.2); border-radius:8px; background:#0c1417; }
+.outputDiagnosticsDetails summary { display:flex; justify-content:space-between; gap:10px; padding:9px 11px; color:#91dcd3; cursor:pointer; font-size:10px; font-weight:700; letter-spacing:.08em; list-style:none; }
+.outputDiagnosticsDetails summary::-webkit-details-marker { display:none; }
+.outputDiagnosticsDetails summary::after { content:'＋'; }
+.outputDiagnosticsDetails[open] summary::after { content:'−'; }
+.outputDiagnosticsDetails summary span { margin-left:auto; color:#91a8ae; }
+.outputDiagnosticsDetails .outputAnalysisWindow { width:min(100%,620px); margin:4px auto 8px; }
+.outputDiagnosticsDetails #outputChainDiagnostics { padding:0 10px 10px; }
+@media (max-width:760px) {
+  .demoSettingsSecondary,.demoConditionsGrid,.demoHwSetupGrid { grid-template-columns:minmax(0,1fr); }
+  .outputDiagnosticsDetails summary { align-items:center; }
+}
+/* EN: Guided HW calibration is one card; phases reveal only the next useful action. */
+.demoSettingsSecondary { display:block; margin-top:12px; }
+.demoHwWizard { margin-top:12px; padding:16px; border-color:rgba(126,230,215,.34); background:linear-gradient(135deg,#141d20,#101619); }
+.hwWizardHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.hwWizardHeader h3 { margin:6px 0 0; color:#e9f5f7; font-size:18px; }
+.hwSetupStatus { flex:0 0 auto; padding:5px 8px; border:1px solid rgba(159,208,255,.25); border-radius:999px; color:#a9c7ce; font-size:10px; letter-spacing:.07em; white-space:nowrap; }
+.hwWizardIntro,.hwWizardPanel p { max-width:760px; color:#b5c5c9; line-height:1.5; }
+.hwWizardPanel { margin-top:12px; padding:14px; border:1px solid rgba(159,208,255,.16); border-radius:9px; background:#101619; }
+.hwWizardPanel[hidden] { display:none; }
+.hwWizardProgress { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+.hwWizardProgress span { padding:6px 8px; border:1px solid rgba(159,208,255,.16); border-radius:6px; color:#80969d; font-size:10px; font-weight:700; letter-spacing:.04em; }
+.hwWizardProgress span.active { border-color:rgba(126,230,215,.55); color:#c5fff3; background:rgba(28,52,51,.48); }
+.hwWizardProgress span.complete { border-color:rgba(121,214,154,.42); color:#b8edc7; }
+.hwWizardLiveStatus { display:block; margin-top:8px; color:#c9f4d6; }
+.hwWizardPanel .label { color:#a8bdc5; font-size:10px; font-weight:700; letter-spacing:.08em; }
+.hwSetupFeedback { margin-top:10px; color:#ffd39b; line-height:1.45; }
+.hwWizardTransport,.hwWizardActions { margin-top:12px; }
+.hwDemoVolControl { max-width:560px; margin-top:14px; padding:12px; border:1px solid rgba(159,208,255,.16); border-radius:8px; }
+.hwDemoVolControl label { display:flex; justify-content:space-between; gap:12px; color:#bdd0d5; font-size:11px; font-weight:700; }
+.hwDemoVolControl output { color:#f4f6fb; font:700 14px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.hwDemoVolControl input { width:100%; margin-top:9px; accent-color:#63cef4; }
+.hwSetupMetrics { margin-top:10px; color:#82969d; }
+
+.hwSetupOpenButton { display:block; width:100%; min-height:46px; margin:12px 0; border-color:rgba(83,214,207,.58); color:#c5fff3; font-weight:800; letter-spacing:.04em; }
+.hwSetupDialog { width:min(520px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 24px); overflow:auto; padding:18px; border:1px solid rgba(113,220,212,.48); border-radius:16px; color:#e9f5f7; background:#0b1012; box-shadow:0 24px 80px rgba(0,0,0,.72); }
+.hwSetupDialog::backdrop { background:rgba(0,0,0,.78); backdrop-filter:blur(4px); }
+.hwSetupDialog .hwWizardHeader { align-items:center; }
+.hwSetupDialog .hwWizardHeader h2 { margin:0; color:#e9f5f7; font-size:22px; }
+.hwSetupClose { width:44px; min-width:44px; height:44px; padding:0; border-radius:50%; font-size:26px; line-height:1; }
+.hwSetupDialog .hwWizardPanel { margin-top:18px; padding:18px; }
+.hwSetupDialog .hwWizardPanel p { margin:0 0 12px; font-size:18px; color:#e4eef0; }
+.hwSetupDialog .hwWizardPanel .hwWizardHint { color:#96acb2; font-size:14px; }
+.hwSetupDialog .hwWizardPanel button { min-height:48px; width:100%; font-weight:800; }
+.hwSetupDialog .hwWizardTransport button { min-height:44px; }
+.hwSetupDialog .hwSetupFeedback:empty { display:none; }
+.demoHwSetupNotice { position:fixed; z-index:10000; inset:50% auto auto 50%; transform:translate(-50%,-50%); width:min(620px,calc(100vw - 28px)); padding:24px; border:2px solid rgba(113,220,212,.8); border-radius:18px; color:#f0fbfb; background:rgba(8,13,15,.96); box-shadow:0 18px 70px rgba(0,0,0,.78); text-align:center; pointer-events:none; }
+.demoHwSetupNotice[hidden] { display:none; }
+.demoHwSetupNotice strong { display:block; color:#aef4e7; font-size:clamp(24px,5vw,38px); line-height:1.15; letter-spacing:.035em; }
+.demoHwSetupNotice p { margin:14px 0 0; color:#e6eff0; font-size:clamp(16px,2.7vw,21px); line-height:1.45; }
+@media(max-width:600px) {
+  .hwSetupDialog { padding:14px; }
+  .hwSetupDialog .hwWizardPanel { padding:14px; }
+  .demoHwSetupNotice { padding:20px 16px; }
+}
+
+@media(max-width:600px){ .hwWizardHeader { flex-direction:column; } .hwWizardHeader h3 { font-size:16px; } .hwWizardProgress { display:grid; grid-template-columns:1fr 1fr; } .hwWizardPanel { padding:11px; } }
+
+.demoVolumeReadout { display:flex; flex-direction:column; align-items:center; color:#c7d3d5; font-size:9px; font-weight:800; letter-spacing:.035em; line-height:1.05; white-space:nowrap; }
+.demoVolumeReadout output { color:#f0f4f5; font:10px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.demoPrimaryAction .demoVolStep { min-height:26px; }
+.demoPrimaryAction .demoVolumeSegments { height:36px; }
+
+
+/* EN: Diagnostic readouts are refreshed once per second and do not affect audio. */
+.lowBandDiagnosticsReadouts { display:grid; gap:4px; margin-top:10px; }
+.lowBandDiagnosticsReadouts > div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:4px 7px; border-radius:4px; background:rgba(255,255,255,.035); }
+.lowBandDiagnosticsReadouts span { color:#aeb9bb; font-size:11px; line-height:1.3; }
+.lowBandDiagnosticsReadouts strong { flex:0 0 auto; color:#e2eded; font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; }
+.lowBandDiagnosticsFootnote { margin-top:6px; font-size:10px; }
+
+
+/* EN: During TEST EFFECT, the candidate gain is hypothetical and shown as a muted ghost. */
+.demoProtectionFill.bypassed { background:#788388; opacity:.68; }
+
+.demoProtectionHeader strong.bypassed { color:#aeb8bc; }
+
+
+/* EN: v13.28 moves A VOL into a centered horizontal row below the Feelness card. */
+.cabinVisualGrid { grid-template-columns:168px minmax(0,360px) 120px; }
+.listenerLevelControls .demoAContentVolumeControl {
+  position:static;
+  z-index:8;
+  grid-column:1;
+  grid-row:2;
+  justify-self:center;
+  align-self:start;
+  width:100%;
+  max-width:168px;
+  height:auto;
+  display:grid;
+  grid-template-columns:auto 24px minmax(40px,1fr) 24px;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  padding:6px 8px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:7px;
+  background:rgba(0,0,0,.70);
+  pointer-events:auto;
+}
+.demoAContentVolumeHeader {
+  width:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  color:#aebcbc;
+  font-size:10px;
+  line-height:1;
+}
+.demoAContentVolumeHeader output { display:none; }
+.demoAContentVolumeControl button {
+  width:24px;
+  min-width:24px;
+  min-height:26px;
+  padding:0;
+  font-size:15px;
+  line-height:1;
+}
+.demoAContentVolumeSegments {
+  width:100%;
+  height:10px;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  align-items:center;
+  gap:2px;
+}
+.demoAContentVolumeSegments span { width:auto; height:6px; }
+.listenerLevelControls .miniLevelScope { grid-row:3; }
+
+.lowBandDiagnosticsDisclosure { margin-top:8px; border-top:1px solid rgba(255,255,255,.08); }
+.lowBandDiagnosticsDisclosure > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:6px 8px;
+  border-radius:4px;
+  background:rgba(255,255,255,.035);
+  color:#aeb9bb;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  list-style:none;
+}
+.lowBandDiagnosticsDisclosure > summary::-webkit-details-marker { display:none; }
+.lowBandDiagnosticsDisclosure > summary::after { content:"+"; color:#cfe7ff; font-size:14px; }
+.lowBandDiagnosticsDisclosure[open] > summary::after { content:"−"; }
+.lowBandDiagnosticsDisclosure .lowBandDiagnosticsReadouts { margin-top:6px; }
+
+@media (max-width:680px) {
+  .listenerLevelControls .miniLevelScope { grid-row:1; }
+  .listenerLevelControls .demoFeelnessControl { grid-column:1; grid-row:2; }
+  .listenerLevelControls .demoSpeedControl { grid-column:2; grid-row:2; }
+  .listenerLevelControls .demoAContentVolumeControl {
+    grid-column:1;
+    grid-row:3;
+    justify-self:stretch;
+    width:100%;
+    max-width:none;
+    grid-template-columns:auto 22px minmax(30px,1fr) 22px;
+    gap:3px;
+    padding:6px;
+  }
+}
+
+@media (max-width:780px) and (min-width:681px) {
+  .cabinVisualGrid {
+    grid-template-columns:132px minmax(0,1fr) 112px;
+    column-gap:16px;
+  }
+  .listenerLevelControls .demoAContentVolumeControl {
+    max-width:132px;
+    grid-template-columns:auto 22px minmax(30px,1fr) 22px;
+    gap:3px;
+    padding:6px;
+  }
+}
+
+
+/* EN: v13.29 places the Program A volume control inside the Feelness card. */
+.listenerLevelControls .miniLevelScope { grid-row:2; }
+.demoFeelnessControl .demoAContentVolumeControl {
+  position:static;
+  z-index:auto;
+  grid-column:auto;
+  grid-row:auto;
+  justify-self:stretch;
+  align-self:auto;
+  width:100%;
+  max-width:none;
+  height:auto;
+  display:grid;
+  grid-template-columns:24px minmax(0,1fr) 24px;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  padding:0;
+  border:0;
+  border-top:0;
+  border-radius:0;
+  background:transparent;
+  pointer-events:auto;
+}
+.demoFeelnessControl .demoAContentVolumeHeader {
+  grid-column:1 / -1;
+  grid-row:1;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#f2c36b;
+  font-size:10px;
+  line-height:1;
+  letter-spacing:.08em;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.demoFeelnessControl .demoAContentVolumeHeader span { text-align:center; }
+.demoFeelnessControl #demoAContentVolDown { grid-column:1; grid-row:2; }
+.demoFeelnessControl .demoAContentVolumeSegments {
+  grid-column:2;
+  grid-row:2;
+  width:100%;
+  height:10px;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  align-items:center;
+  gap:2px;
+}
+.demoFeelnessControl #demoAContentVolUp { grid-column:3; grid-row:2; }
+.demoFeelnessControl .demoAContentVolumeControl button {
+  width:24px;
+  min-width:24px;
+  min-height:26px;
+  padding:0;
+  font-size:15px;
+  line-height:1;
+}
+.demoFeelnessControl .demoAContentVolumeSegments span { width:auto; height:6px; }
+
+@media (max-width:680px) {
+  .demoFeelnessControl .demoAContentVolumeControl {
+    grid-template-columns:22px minmax(0,1fr) 22px;
+    gap:3px;
+  }
+  .demoFeelnessControl .demoAContentVolumeControl button { width:22px; min-width:22px; }
+}
+@media (max-width:780px) and (min-width:681px) {
+  .demoFeelnessControl .demoAContentVolumeControl {
+    grid-template-columns:22px minmax(0,1fr) 22px;
+    gap:3px;
+  }
+  .demoFeelnessControl .demoAContentVolumeControl button { width:22px; min-width:22px; }
+}
+
+
+/* EN: v13.30 keeps the playlist and live protection overview visible above the details disclosure. */
+.releaseStatus { display:inline-block; margin-top:4px; color:#f2c36b; font-size:12px; font-weight:800; letter-spacing:.08em; }
+.demoSettingsPrimary { align-items:stretch; }
+.demoLiveOutput { min-width:0; }
+.demoMoreDetails { margin-top:14px; }
+.demoMoreDetails > summary { display:flex; align-items:center; justify-content:center; min-height:52px; padding:12px 18px; border:1px solid rgba(126,230,215,.46); border-radius:9px; background:linear-gradient(135deg,rgba(17,39,43,.98),rgba(14,24,29,.98)); color:#a9eee3; cursor:pointer; font-size:15px; font-weight:800; letter-spacing:.12em; list-style:none; text-align:center; }
+.demoMoreDetails > summary::-webkit-details-marker { display:none; }
+.demoMoreDetails > summary::after { content:"＋"; margin-left:12px; font-size:18px; }
+.demoMoreDetails[open] > summary::after { content:"−"; }
+.demoMoreDetailsBody { padding-top:14px; }
+.demoSettingsPanel .labSettingsTitle { min-height:44px; margin:0; padding:0; border:0; border-radius:0; background:transparent; color:inherit; font:inherit; font-weight:inherit; letter-spacing:inherit; text-align:left; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:pan-y; }
+.demoSettingsPanel .labSettingsTitle:focus-visible { outline:2px solid #7ef3dd; outline-offset:4px; }
+.demoMoreDetails[hidden] { display:none !important; }
+.hideAdvancedDetails { display:block; min-height:44px; margin:14px auto 0; }
+.releaseInfoDialog { width:min(500px,calc(100vw - 28px)); max-width:none; max-height:calc(100dvh - 24px); overflow:auto; padding:20px; border:1px solid rgba(126,230,215,.42); border-radius:14px; color:#e9f5f7; background:#0b1012; box-shadow:0 24px 80px rgba(0,0,0,.72); }
+.releaseInfoDialog::backdrop { background:rgba(0,0,0,.78); backdrop-filter:blur(4px); }
+.releaseInfoHeader { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.releaseInfoDialog h2 { margin:16px 0 10px; color:#e9f5f7; font-size:21px; }
+.releaseInfoDialog p { color:#d1e0e3; line-height:1.5; }
+.releaseInfoHint { font-size:13px; color:#9db2b8 !important; }
+.releaseInfoClose { min-width:44px; min-height:44px; padding:0; font-size:22px; }
+.releaseInfoActions { display:flex; justify-content:flex-end; margin-top:20px; }
+.releaseInfoActions button { min-height:48px; padding:10px 20px; font-weight:800; }
+.demoConditionsGroup > .hwSetupOpenButton { width:100%; margin:10px 0 12px; }
+.demoMoreDetails .demoConditionsGroup { margin:0; }
+.demoMoreDetails .demoConditionsGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.demoLevelCondition > #demoSetupPresentation { display:block; margin-top:7px; }
+.demoLevelCondition .demoOutputSettings { margin-top:8px; }
+.demoDiagnosticsGroup { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; }
+.demoDiagnosticsGroup > details { min-width:0; margin-top:0; }
+.demoDiagnosticsGroup .outputDiagnosticsDetails { margin-top:0; }
+@media (max-width:780px) { .demoMoreDetails .demoConditionsGrid, .demoDiagnosticsGroup { grid-template-columns:minmax(0,1fr); } }
+
+
+/* EN: v14.1 aligns Device vol check with the demo/settings view switch. */
+.demoFooter > .modeToggle { position:static; }
+.demoFooter > .hwSetupOpenButton {
+  width:auto;
+  min-width:0;
+  min-height:44px;
+  margin:0;
+  white-space:nowrap;
+}
+.demoSettingsPanel { margin-bottom:0; }
+.demoMoreDetails { margin:14px auto 0; }
+.demoMoreDetailsBody > .sourceGrid {
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(126,230,215,.16);
+}
+.demoMoreDetailsBody > section.controlBox,
+.demoMoreDetailsBody > section.readoutBox,
+.demoMoreDetailsBody > section.about,
+.demoMoreDetailsBody > h2,
+.demoMoreDetailsBody > pre,
+.demoMoreDetailsBody > .footer {
+  margin-top:12px;
+}
+@media (max-width:680px) {
+  .demoFooter { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+  .demoFooter > button { width:100%; min-width:0; padding:7px 4px; font-size:10px; text-align:center; white-space:nowrap; }
+  .demoFooter > #viewModeToggle { padding:7px 4px; font-size:10px; }
+  .demoFooter > #versionInfoOpen { justify-self:stretch; }
+}
+
+
+/* EN: v14.1 groups live processing values with demo levels and combines diagnostics. */
+.demoLevelOutputRow { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:7px; }
+.demoLevelOutputRow > span { color:#91a8b1; font-size:10px; font-weight:800; letter-spacing:.07em; }
+.demoLevelOutputRow > strong { margin:0; }
+.demoDiagnosticsGroup { display:block; }
+.demoDiagnosticsGroup .lowBandDiagnosticsDisclosure { margin-top:0; }
+.outputChainDiagnosticsHeader { margin-top:14px; padding-top:11px; border-top:1px solid rgba(126,230,215,.16); color:#b7c9ce; font-size:11px; font-weight:800; letter-spacing:.08em; }
+.outputChainDiagnosticsHeader span { float:right; color:#86aaa9; }
+.demoHwSetupNotice { opacity:0; visibility:hidden; transform:translate(-50%,calc(-50% + 10px)); transition:opacity 280ms ease, transform 280ms ease, visibility 280ms ease; }
+.demoHwSetupNotice.visible { opacity:1; visibility:visible; transform:translate(-50%,-50%); }
+@media (prefers-reduced-motion: reduce) { .demoHwSetupNotice { transition:none; } }
+
+
+/* EN: v14.1 makes diagnostics compact while keeping live numeric text readable. */
+.lowBandDiagnosticsReadouts {
+  width:min(100%,1000px);
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px 8px;
+}
+.lowBandDiagnosticsReadouts > div { min-height:30px; padding:5px 8px; }
+.lowBandDiagnosticsReadouts span { min-width:0; }
+.outputChainDiagnosticsHeader,
+#outputChainDiagnostics { max-width:1000px; }
+#outputChainDiagnostics { white-space:pre-wrap; }
+@media (max-width:720px) {
+  .lowBandDiagnosticsReadouts { grid-template-columns:minmax(0,1fr); }
+}
+
+/* EN: v14.1 puts readable output-chain steps beside the final-output spectrum. */
+.outputChainLayout { display:grid; grid-template-columns:minmax(220px,.85fr) minmax(0,1.4fr); align-items:start; gap:12px; margin-top:8px; }
+.outputChainLayout #outputChainDiagnostics { display:grid; gap:6px; max-width:none; margin:0; white-space:normal; }
+.outputChainLayout .demoFinalOutputSetup { grid-column:2; grid-row:1; width:100%; max-width:none; margin:0; }
+.outputChainDiagnosticsMeta { color:#91a8ae; font-size:10px; line-height:1.35; }
+.outputChainStep { display:grid; gap:3px; padding:7px 8px; border-left:2px solid rgba(126,230,215,.42); border-radius:3px; background:rgba(255,255,255,.035); }
+.outputChainStep strong { color:#b7c9ce; font-size:10px; line-height:1.3; letter-spacing:.035em; }
+.outputChainStep span { color:#e2eded; font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; }
+.outputChainDiagnosticsNote { margin:2px 0 0; color:#91a8ae; font-size:10px; line-height:1.4; }
+.demoHwSetupNotice { padding:20px 24px; border:0; border-radius:12px; background:rgba(8,13,15,.76); box-shadow:none; transform:translate(-50%,-50%); transition:opacity 1s ease, visibility 0s linear 3s; }
+.demoHwSetupNotice.visible { transform:translate(-50%,-50%); transition:opacity 1s ease, visibility 0s; }
+.demoHwSetupNotice strong { font-size:clamp(20px,3vw,22px); }
+.demoHwSetupNotice p { margin-top:10px; font-size:16px; }
+@media (max-width:760px) { .outputChainLayout { grid-template-columns:minmax(0,1fr); } .outputChainLayout .demoFinalOutputSetup { grid-column:1; grid-row:auto; } }
+
+
+/* EN: Reveal the demo surface behind the fixed-volume reminder. */
+body.demoViewTransition .header,
+body.demoViewTransition .cabinTestBox,
+body.demoViewTransition .demoFooter {
+  opacity: 0;
+}
+.header,
+.cabinTestBox,
+.demoFooter {
+  transition: opacity 1000ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .cabinTestBox,
+  .demoFooter {
+    transition: none;
+  }
+}
