@@ -5,44 +5,44 @@
   import {
     createProgramSource,renderProgramMixOffline
   }
-  from './procedural-music-lab/program-source.js?rev=v14.11';
+  from './procedural-music-lab/program-source.js?rev=v14.11-pages-fix-1';
   import {
     createContentFeelnessAnalyzer, setContentAnalysisOfflineSummary
   }
-  from './content-feelness-analysis.js?rev=v14.11';
+  from './content-feelness-analysis.js?rev=v14.11-pages-fix-1';
   import {
     analyseProgramLoudness,applyProgramReferenceTrim
   }
-  from './program-loudness-analysis.js?rev=v14.11';
+  from './program-loudness-analysis.js?rev=v14.11-pages-fix-1';
   import {
     createLowBandProtectionChain
   }
-  from './shared-audio/low-band-protection-chain.js?rev=v14.11';
+  from './shared-audio/low-band-protection-chain.js?rev=v14.11-pages-fix-1';
   import {
     createFullBandOutputGuard
   }
-  from './shared-audio/full-band-output-guard.js?rev=v14.11';
+  from './shared-audio/full-band-output-guard.js?rev=v14.11-pages-fix-1';
   import {
     createRealtimeAudioAnalyzer
   }
-  from './shared-audio/realtime-audio-analyzer.js?rev=v14.11';
+  from './shared-audio/realtime-audio-analyzer.js?rev=v14.11-pages-fix-1';
   import {
     createAudioAnalysisWindow
   }
-  from './audio-analysis-window.js?rev=v14.11';
+  from './audio-analysis-window.js?rev=v14.11-pages-fix-1';
   import {
     createRoomMeter
   }
-  from './room-meter.js?rev=v14.11';
-  import { createEMajorTriadOctaveBuffer, createEMajorTriadOctaveCue } from './e-major-triad-octave-cue.js?rev=v14.11';
+  from './room-meter.js?rev=v14.11-pages-fix-1';
+  import { createEMajorTriadOctaveBuffer, createEMajorTriadOctaveCue } from './e-major-triad-octave-cue.js?rev=v14.11-pages-fix-1';
   import {
     createDemoExperienceController
   }
-  from './demo-experience-controller.js?rev=v14.11';
+  from './demo-experience-controller.js?rev=v14.11-pages-fix-1';
   import {
     createCabinRenderer
   }
-  from './cabin-renderer.js?rev=v14.11';
+  from './cabin-renderer.js?rev=v14.11-pages-fix-1';
   // ============================================================================
   // Headrest Spill / Background Scene Lab v7.42
   // Derived conceptually from Tactile Loudness Meter v6.0.
