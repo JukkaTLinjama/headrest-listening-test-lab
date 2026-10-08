@@ -5,7 +5,7 @@
   import {
     createProgramSource,renderProgramMixOffline
   }
-  from '../../procedural-music-lab/program-source.js?rev=v14.11';
+  from './procedural-music-lab/program-source.js?rev=v14.11';
   import {
     createContentFeelnessAnalyzer, setContentAnalysisOfflineSummary
   }
@@ -17,15 +17,15 @@
   import {
     createLowBandProtectionChain
   }
-  from '../../shared-audio/low-band-protection-chain.js?rev=v14.11';
+  from './shared-audio/low-band-protection-chain.js?rev=v14.11';
   import {
     createFullBandOutputGuard
   }
-  from '../../shared-audio/full-band-output-guard.js?rev=v14.11';
+  from './shared-audio/full-band-output-guard.js?rev=v14.11';
   import {
     createRealtimeAudioAnalyzer
   }
-  from '../../shared-audio/realtime-audio-analyzer.js?rev=v14.11';
+  from './shared-audio/realtime-audio-analyzer.js?rev=v14.11';
   import {
     createAudioAnalysisWindow
   }

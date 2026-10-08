@@ -1,0 +1,99 @@
+// Performance phrasing for the procedural program.
+// This layer never creates notes: it only shapes timing, timbre, space and density.
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*clamp(t,0,1);
+const CADENCE_STRETCH=.55;
+const CADENCE_POWER=1.7;
+
+// EN: Phrase breaths are variation-level timing choices, not tempo changes.
+// Two musically safe phrase boundaries are chosen per variation. Their combined
+// duration is fixed so the host loop length stays stable while placement and
+// individual breath lengths vary. At 35–70 ms these are tiny timing inflections.
+export const PHRASE_BREATH_TOTAL=.105;
+const PHRASE_BREATH_BOUNDARIES=[4,7,10,13,16,18]; // before these 1-based bars
+
+export function createPhraseBreaths(rng=Math.random){
+  const candidates=[...PHRASE_BREATH_BOUNDARIES];
+  const first=candidates.splice(Math.floor(rng()*candidates.length),1)[0];
+  const second=candidates[Math.floor(rng()*candidates.length)];
+  const firstDur=.035+rng()*.035;
+  const secondDur=PHRASE_BREATH_TOTAL-firstDur;
+  return [
+    {beforeBar:Math.min(first,second),duration:first<second?firstDur:secondDur},
+    {beforeBar:Math.max(first,second),duration:first<second?secondDur:firstDur}
+  ];
+}
+
+export function getPhrasingState(barIndex,phaseInBar=0){
+  const p=clamp(phaseInBar,0,1);
+
+  let trebleDb;
+  if(barIndex<4) trebleDb=lerp(-21,-18,(barIndex+p)/4);
+  else if(barIndex<13) trebleDb=lerp(-18,-12,(barIndex-4+p)/9);
+  else if(barIndex<16) trebleDb=lerp(-12,-14,(barIndex-13+p)/3);
+  else if(barIndex<19) trebleDb=lerp(-15,-23,(barIndex-16+p)/3);
+  else trebleDb=lerp(-23,-27,p);
+
+  let reverbMix;
+  if(barIndex<5) reverbMix=lerp(.50,.55,(barIndex+p)/5);
+  else if(barIndex<12) reverbMix=lerp(.55,.30,(barIndex-5+p)/7);
+  else if(barIndex<16) reverbMix=lerp(.30,.48,(barIndex-12+p)/4);
+  else if(barIndex<19) reverbMix=lerp(.48,.82,(barIndex-16+p)/3);
+  else reverbMix=lerp(.82,.90,p);
+
+  // v3.0: cadence slows audibly from early in the bar, so the final resolution
+  // arrives with a clear wait. The following empty bar remains at base tempo.
+  const tempoScale=barIndex===19?1+CADENCE_STRETCH*CADENCE_POWER*Math.pow(p,CADENCE_POWER-1):1;
+
+  const pedalDensity=barIndex<8?.55:barIndex<16?.48:barIndex<19?.38:.25;
+  const ornamentDensity=barIndex<13?1:barIndex<19?.75:.35;
+  return{trebleDb,reverbMix,tempoScale,pedalDensity,ornamentDensity};
+}
+
+function keepOptional(event,phrase,rng){
+  if(event.optional==='pedalSecondary')return rng()<phrase.pedalDensity;
+  if(event.optional==='pedalOrnament')return rng()<phrase.pedalDensity*.55;
+  if(event.optional==='ornament')return rng()<phrase.ornamentDensity;
+  return true;
+}
+
+function performedLocalTime(local,bar,barIndex){
+  if(barIndex!==19)return local;
+  const p=clamp(local/bar,0,1);
+  return bar*(p+CADENCE_STRETCH*Math.pow(p,CADENCE_POWER));
+}
+
+export function getPerformedBarStarts({bar,totalBars,breaths=[]}){
+  const starts=[0];
+  for(let i=0;i<totalBars;i++){
+    const duration=i===19?performedLocalTime(bar,bar,i):bar;
+    const breath=breaths.find(item=>item.beforeBar===i+2)?.duration||0;
+    starts.push(starts[i]+duration+breath);
+  }
+  return starts;
+}
+
+export function applyPhrasing(events,{bar,totalBars,rng=Math.random,breaths=null}){
+  const phraseBreaths=breaths||createPhraseBreaths(rng);
+  const starts=getPerformedBarStarts({bar,totalBars,breaths:phraseBreaths});
+  const performed=events.flatMap(event=>{
+    const sourceBar=Math.min(totalBars-1,Math.max(0,Math.floor(event.start/bar)));
+    const sourceBarStart=sourceBar*bar;
+    const local=event.start-sourceBarStart;
+    const phase=clamp(local/bar,0,1);
+    const phrase=getPhrasingState(sourceBar,phase);
+    if(!keepOptional(event,phrase,rng))return[];
+    const start=starts[sourceBar]+performedLocalTime(local,bar,sourceBar);
+    const dur=event.dur*phrase.tempoScale;
+    return[{...event,start,dur,phrase}];
+  }).sort((a,b)=>a.start-b.start);
+  Object.defineProperty(performed,'breaths',{value:phraseBreaths,enumerable:false});
+  Object.defineProperty(performed,'barStarts',{value:starts,enumerable:false});
+  return performed;
+}
+
+export function getPerformedLoopDuration({bar,totalBars}){
+  const starts=getPerformedBarStarts({bar,totalBars});
+  return starts[starts.length-1]+PHRASE_BREATH_TOTAL;
+}
