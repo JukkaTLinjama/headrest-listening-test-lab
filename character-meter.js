@@ -1,7 +1,7 @@
 // Reusable horizontal Character Meter UI.
 // EN: This view renders supplied level frames only. It has no AudioContext dependency.
 
-import { createTemporalIndicator } from '../../shared-ui/temporal-indicator.js?v=1.0';
+import { createTemporalIndicator } from './shared-ui/temporal-indicator.js?v=1.0';
 
 const MIN_DB = -60;
 const MAX_DB = 0;

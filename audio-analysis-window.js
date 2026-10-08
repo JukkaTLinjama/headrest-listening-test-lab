@@ -1,7 +1,7 @@
 // Compact canvas renderer for final-output Signal Character frames.
 // EN: Rendering receives numeric frames only; it has no Web Audio or control ownership.
 
-import { createTemporalIndicator } from '../../shared-ui/temporal-indicator.js?v=1.0';
+import { createTemporalIndicator } from './shared-ui/temporal-indicator.js?v=1.0';
 const OCTAVE_LABELS = [
   { frequency: 31.5, label: '31' },
   { frequency: 125, label: '125' },

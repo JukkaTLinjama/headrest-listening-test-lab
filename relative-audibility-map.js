@@ -1,7 +1,7 @@
 // Relative Audibility Map for Spill Lab.
 // EN: This module visualizes observer frames only; it has no Web Audio, gain, or routing ownership.
 
-import { createTemporalIndicator } from '../../shared-ui/temporal-indicator.js?v=1.0';
+import { createTemporalIndicator } from './shared-ui/temporal-indicator.js?v=1.0';
 const OCTAVE_LABELS = [[31.5, '31'], [125, '125'], [500, '500'], [2000, '2k'], [8000, '8k']];
 const OCTAVE_DIVIDERS = [31.5, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 const RELATIVE_REQUIREMENT_DB = [
